@@ -1,0 +1,53 @@
+#!/bin/bash
+
+set -e
+set -u
+# Constants
+TMP_DIR=$(mktemp -d)
+STACK_CACHE_ROOT="/tmp/drycc/stack/cache"
+STACK_DOWNLOAD_URL="${STACK_DOWNLOAD_URL:-https://download.drycc.cc/stacks}"
+
+# OS Release
+. /etc/os-release
+
+function clean {
+    # delay before exiting, so stdout/stderr flushes through the logging system
+    rm -rf "${TMP_DIR}"
+    sleep 3
+}
+trap clean EXIT
+
+function main() {
+    local name="${1:?name is required}"
+    local version="${2:?version is required}"
+
+    local os_name="${OS_NAME:-linux}"
+    local os_arch="${OS_ARCH:-$(dpkg --print-architecture)}"
+    local os_flavour="${OS_FLAVOUR:-${ID}-${VERSION_ID}}"
+
+    local stack_name="${name}-${version}-${os_name}-${os_arch}-${os_flavour}"
+    local stack_filename="${stack_name}".tar.gz
+    local stack_download_url="${STACK_DOWNLOAD_URL}/${name}/${stack_filename}"
+
+    echo "Downloading $stack_filename package"
+    if [ -f "${STACK_CACHE_ROOT}/${stack_filename}" ]; then
+        echo "${STACK_CACHE_ROOT}/${stack_filename} already exists, skipping download."
+        cp "${STACK_CACHE_ROOT}/${stack_filename}" "${TMP_DIR}/${stack_filename}"
+        rm "${STACK_CACHE_ROOT}/${stack_filename}"
+    else
+        curl --silent --show-error --fail "${stack_download_url}" -o "${TMP_DIR}/${stack_filename}"
+    fi
+    echo "Generate installation directory: /opt/drycc/"${name}""
+    if [ -d /opt/drycc/"${name}" ]; then
+        rm -rf /opt/drycc/"${name}"
+    fi
+    mkdir -p /opt/drycc/"${name}"
+
+    tar --directory "${TMP_DIR}" --extract --gunzip --file "${TMP_DIR}"/"${stack_filename}" --no-same-owner
+    install-packages $(< ${TMP_DIR}/meta/dependencies)
+    "${TMP_DIR}"/meta/preinstall
+    cp -rf "${TMP_DIR}"/data/* /opt/drycc/"${name}"
+    "${TMP_DIR}"/meta/postinstall
+}
+
+main "$@"

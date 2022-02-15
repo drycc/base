@@ -1,0 +1,12 @@
+image: docker.io/drycc/base:bullseye
+manifests:
+  -
+    image: docker.io/drycc/base:bullseye-amd64
+    platform:
+      architecture: amd64
+      os: linux
+  -
+    image: docker.io/drycc/base:bullseye-arm64
+    platform:
+      architecture: arm64
+      os: linux
