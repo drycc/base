@@ -36,6 +36,7 @@ rootfs_chroot() {
 
 # Add some tools we need.
 rootfs_chroot apt-get install -y --no-install-recommends \
+  tini \
   curl \
   netbase \
   ca-certificates
