@@ -39,6 +39,7 @@ rootfs_chroot apt-get install -y --no-install-recommends \
   tini \
   curl \
   netbase \
+  pax-utils \
   ca-certificates
 
 # We have our own version of initctl, tell dpkg to not overwrite it.
