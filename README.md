@@ -19,7 +19,7 @@ There isn't a `:latest` tag, because each debian version is a tag.
 This base image supports drycc stack installation, its usage is:
 
 ```
-install-stack postgresql 14.1 /opt/drycc
+install-stack postgresql 14.1
 ```
 
 All stacks currently supported by drycc are in the [stacks](https://github.com/drycc/stacks) project.

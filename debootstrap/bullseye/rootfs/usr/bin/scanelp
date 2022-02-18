@@ -1,4 +1,6 @@
-find $1 -type f -executable -exec scanelf --needed --nobanner --format '%n#p' '{}' ';' \
+#!/bin/bash
+
+find "$1" -type f -executable -exec scanelf --needed --nobanner --format '%n#p' '{}' ';' \
   | tr ',' '\n' \
   | sort -u \
   | xargs -rt dpkg -S 2>/dev/null \

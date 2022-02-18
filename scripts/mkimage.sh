@@ -21,7 +21,7 @@ VARIANT=$1
 DIST=$2
 
 WORKDIR="/workspace/$DIST"
-ROOTFSDIR=$(cd "$(dirname "$0")/$DIST/rootfs";pwd)
+ROOTFSDIR=$(cd "$(dirname "$0")/../debootstrap/$DIST/rootfs";pwd)
 mkdir -p "$WORKDIR"
 
 debootstrap --variant="$VARIANT" "$DIST" "$WORKDIR" http://httpredir.debian.org/debian
@@ -46,7 +46,7 @@ rootfs_chroot apt-get install -y --no-install-recommends \
 rootfs_chroot dpkg-divert --local --rename --add /sbin/initctl
 
 # Set the mirrors to distro-based ones
-cat << EOF > $WORKDIR/etc/apt/sources.list
+cat << EOF > "$WORKDIR"/etc/apt/sources.list
 deb http://deb.debian.org/debian $DIST main
 deb http://deb.debian.org/debian $DIST-updates main
 deb http://deb.debian.org/debian-security $DIST-security main

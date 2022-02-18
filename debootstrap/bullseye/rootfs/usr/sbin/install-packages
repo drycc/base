@@ -23,7 +23,7 @@ function main {
             exit $CODE
         fi
         echo "apt failed, retrying"
-        n=$(($n + 1))
+        n=$((n + 1))
     done
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 }

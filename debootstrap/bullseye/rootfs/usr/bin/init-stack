@@ -1,0 +1,13 @@
+#!/bin/bash
+profiles=$(find /opt/drycc/*/profile.d/* 2>/dev/null)
+for profile in ${profiles}
+do
+  # shellcheck source=/dev/null
+  . "${profile}"
+done
+
+if [[ "$$" == "1" ]] ; then
+  exec tini -g -- "$@"
+else
+  exec tini -sg -- "$@"
+fi

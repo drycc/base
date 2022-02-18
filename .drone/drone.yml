@@ -10,7 +10,7 @@ steps:
 - name: publish
   commands:
   - echo $DOCKER_PASSWORD | docker login $DRYCC_REGISTRY --username $DOCKER_USERNAME --password-stdin
-  - ./build.sh bullseye
+  - make publish clean
   environment:
     DEV_REGISTRY:
       from_secret: dev_registry
@@ -38,7 +38,7 @@ steps:
 - name: publish
   commands:
   - echo $DOCKER_PASSWORD | docker login $DRYCC_REGISTRY --username $DOCKER_USERNAME --password-stdin
-  - ./build.sh bullseye
+  - make publish clean
   environment:
     DEV_REGISTRY:
       from_secret: dev_registry
