@@ -1,9 +1,34 @@
 #!/bin/bash
-profiles=$(find /opt/drycc/*/profile.d/* 2>/dev/null)
-for profile in ${profiles}
+
+env_list=$(find /opt/drycc/*/env/* 2>/dev/null)
+for env in ${env_list}
+do
+  key=$(echo "${env}" | awk -F "/" '{print $NF}')
+  value=$(<"${env}")
+  # shellcheck source=/dev/null
+  export "${key}=${value}"
+done
+
+env_launch_list=$(find /opt/drycc/*/env.launch/* 2>/dev/null)
+for env in ${env_launch_list}
+do
+  key=$(echo "${env}" | awk -F "/" '{print $NF}')
+  value=$(<"${env}")
+  # shellcheck source=/dev/null
+  export "${key}=${value}"
+done
+
+profile_list=$(find /opt/drycc/*/profile.d/* 2>/dev/null)
+for profile in ${profile_list}
 do
   # shellcheck source=/dev/null
   . "${profile}"
+done
+
+exec_list=$(find /opt/drycc/*/exec.d/* 2>/dev/null)
+for _exec in ${exec_list}
+do
+  "${_exec}"
 done
 
 if [[ "$$" == "1" ]] ; then
