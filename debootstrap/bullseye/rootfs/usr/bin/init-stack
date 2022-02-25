@@ -1,6 +1,6 @@
 #!/bin/bash
 
-env_list=$(find /opt/drycc/*/env/* 2>/dev/null)
+env_list=$(find /opt/drycc/*/env/* 2>/dev/null || echo "")
 for env in ${env_list}
 do
   key=$(echo "${env}" | awk -F "/" '{print $NF}')
@@ -9,7 +9,7 @@ do
   export "${key}=${value}"
 done
 
-env_launch_list=$(find /opt/drycc/*/env.launch/* 2>/dev/null)
+env_launch_list=$(find /opt/drycc/*/env.launch/* 2>/dev/null || echo "")
 for env in ${env_launch_list}
 do
   key=$(echo "${env}" | awk -F "/" '{print $NF}')
@@ -18,14 +18,14 @@ do
   export "${key}=${value}"
 done
 
-profile_list=$(find /opt/drycc/*/profile.d/* 2>/dev/null)
+profile_list=$(find /opt/drycc/*/profile.d/* 2>/dev/null || echo "")
 for profile in ${profile_list}
 do
   # shellcheck source=/dev/null
   . "${profile}"
 done
 
-exec_list=$(find /opt/drycc/*/exec.d/* 2>/dev/null)
+exec_list=$(find /opt/drycc/*/exec.d/* 2>/dev/null) || echo ""
 for _exec in ${exec_list}
 do
   "${_exec}"
