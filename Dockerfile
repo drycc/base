@@ -1,4 +1,5 @@
 ARG BASE_LAYER
 FROM ${BASE_LAYER}
 ENV LANG C.UTF-8
+SHELL ["/bin/bash", "-c"]
 ENTRYPOINT ["init-stack"]
