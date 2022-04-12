@@ -9,17 +9,17 @@ platform:
 steps:
 - name: publish
   commands:
-  - echo $DOCKER_PASSWORD | docker login $DRYCC_REGISTRY --username $DOCKER_USERNAME --password-stdin
-  - make publish clean
+  - echo $CONTAINER_PASSWORD | docker login $DRYCC_REGISTRY --username $CONTAINER_USERNAME --password-stdin > /dev/null 2>&1
+  - make clean publish clean
   environment:
     DEV_REGISTRY:
       from_secret: dev_registry
     DRYCC_REGISTRY:
       from_secret: drycc_registry
-    DOCKER_USERNAME:
-      from_secret: docker_username
-    DOCKER_PASSWORD:
-      from_secret: docker_password
+    CONTAINER_USERNAME:
+      from_secret: container_username
+    CONTAINER_PASSWORD:
+      from_secret: container_password
   when:
     event:
     - push
@@ -37,17 +37,17 @@ platform:
 steps:
 - name: publish
   commands:
-  - echo $DOCKER_PASSWORD | docker login $DRYCC_REGISTRY --username $DOCKER_USERNAME --password-stdin
-  - make publish clean
+  - echo $CONTAINER_PASSWORD | docker login $DRYCC_REGISTRY --username $CONTAINER_USERNAME --password-stdin > /dev/null 2>&1
+  - make clean publish clean
   environment:
     DEV_REGISTRY:
       from_secret: dev_registry
     DRYCC_REGISTRY:
       from_secret: drycc_registry
-    DOCKER_USERNAME:
-      from_secret: docker_username
-    DOCKER_PASSWORD:
-      from_secret: docker_password
+    CONTAINER_USERNAME:
+      from_secret: container_username
+    CONTAINER_PASSWORD:
+      from_secret: container_password
   when:
     event:
     - push
@@ -57,16 +57,29 @@ steps:
 kind: pipeline
 type: docker
 name: manifest
+image_pull_secrets:
+- container_pull_secrets
 
 steps:
+- name: generate manifest
+  image: registry.drycc.cc/drycc/python-dev
+  pull: always
+  commands:
+  - sed -i "s/registry.drycc.cc/$${DRYCC_REGISTRY}/g" .drone/manifest.tmpl
+  environment:
+    DEV_REGISTRY:
+      from_secret: dev_registry
+    DRYCC_REGISTRY:
+      from_secret: drycc_registry
+
 - name: publish
   image: plugins/manifest
   settings:
     spec: .drone/manifest.tmpl
     username:
-      from_secret: docker_username
+      from_secret: container_username
     password:
-      from_secret: docker_password
+      from_secret: container_password
   environment:
     DEV_REGISTRY:
       from_secret: dev_registry

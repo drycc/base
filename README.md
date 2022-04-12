@@ -9,7 +9,7 @@ A slimmed-down Debian-based container image used as the basis of [Drycc Workflow
 Start your Dockerfile with this line:
 
 ```
-FROM docker.io/drycc/base:bullseye
+FROM registry.drycc.cc/drycc/base:bullseye
 ```
 
 There isn't a `:latest` tag, because each debian version is a tag.
