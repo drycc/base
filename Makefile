@@ -15,15 +15,21 @@ clean:
 mkimage:
 	./scripts/mkimage.sh minbase "${CODENAME}"
 
-build: mkimage
+docker-build: mkimage
 	@docker build . \
 	  --tag ${IMAGE} \
 	  --build-arg BASE_LAYER=$(shell docker import ${WORK_DIR}.tar.gz) \
 	  --file Dockerfile
 
-publish: test-style	build
+docker-immutable-push: test-style	build
 	@docker push "${IMAGE}"
 	@echo -e "\\033[32m---> Build image $codename complete, enjoy life...\\033[0m"
+
+build: docker-build
+
+publish: docker-immutable-push
+
+test: test-style
 
 test-style:
 	${SHELLCHECK_PREFIX} $(SHELL_SCRIPTS)
