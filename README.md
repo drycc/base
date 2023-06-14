@@ -1,6 +1,6 @@
 # Drycc Base Image
 
-[![Build Status](https://drone.drycc.cc/api/badges/drycc/base/status.svg)](https://drone.drycc.cc/drycc/base)
+[![Build Status](https://woodpecker.drycc.cc/api/badges/drycc/base/status.svg)](https://woodpecker.drycc.cc/drycc/base)
 
 A slimmed-down Debian-based container image used as the basis of [Drycc Workflow](https://github.com/drycc/workflow) and other components.
 
