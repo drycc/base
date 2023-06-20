@@ -1,4 +1,3 @@
-CODENAME ?= bookworm
 DEV_REGISTRY ?= registry.drycc.cc
 DRYCC_REGISTRY ?= ${DEV_REGISTRY}
 IMAGE = "${DRYCC_REGISTRY}"/drycc/base:"${CODENAME}"-"$(shell dpkg --print-architecture)"

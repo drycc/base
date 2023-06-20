@@ -1,4 +1,4 @@
-image: registry.drycc.cc/drycc/{{project}}:bookworm
+image: registry.drycc.cc/drycc/{{project}}:{{codename}}
 {{#if build.tags}}
 tags:
 {{#each build.tags}}
@@ -7,12 +7,12 @@ tags:
 {{/if}}
 manifests:
   -
-    image: registry.drycc.cc/drycc/{{project}}:bookworm-amd64
+    image: registry.drycc.cc/drycc/{{project}}:{{codename}}-amd64
     platform:
       architecture: amd64
       os: linux
   -
-    image: registry.drycc.cc/drycc/{{project}}:bookworm-arm64
+    image: registry.drycc.cc/drycc/{{project}}:{{codename}}-arm64
     platform:
       architecture: arm64
       os: linux
