@@ -1,6 +1,7 @@
 DEV_REGISTRY ?= registry.drycc.cc
 DRYCC_REGISTRY ?= ${DEV_REGISTRY}
 IMAGE = "${DRYCC_REGISTRY}"/drycc/base:"${CODENAME}"-"$(shell dpkg --print-architecture)"
+BASE_LAYER = "${IMAGE}"-prebuild
 WORK_DIR = /workspace/"${CODENAME}"
 
 SHELLCHECK_PREFIX := docker run --rm -v ${CURDIR}:/workdir -w /workdir ${DRYCC_REGISTRY}/drycc/go-dev shellcheck
@@ -14,10 +15,13 @@ clean:
 mkimage:
 	./scripts/mkimage.sh minbase "${CODENAME}"
 
-docker-build: mkimage
+docker-import:
+	@docker import ${WORK_DIR}.tar.gz ${BASE_LAYER}
+
+docker-build: mkimage docker-import
 	@docker build . \
 	  --tag ${IMAGE} \
-	  --build-arg BASE_LAYER=$(shell docker import ${WORK_DIR}.tar.gz) \
+	  --build-arg BASE_LAYER=${BASE_LAYER} \
 	  --file Dockerfile
 
 docker-immutable-push: test-style	build
