@@ -80,7 +80,7 @@ find "$WORKDIR"/usr/share/doc -mindepth 1 -type d -empty -delete
 # Hardcode this somewhere
 rm -f "$WORKDIR"/etc/machine-id
 
-# This gets overridden by Docker at runtime.
+# This gets overridden by Container at runtime.
 rm -f "$WORKDIR"/etc/hostname
 
 # Create required directory

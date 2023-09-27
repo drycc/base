@@ -1,4 +1,4 @@
-# Since Docker users are looking for the smallest possible final images, the
+# Since Container users are looking for the smallest possible final images, the
 # following emerges as a very common pattern:
 
 #   RUN apt-get update \

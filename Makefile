@@ -4,7 +4,7 @@ IMAGE = "${DRYCC_REGISTRY}"/drycc/base:"${CODENAME}"-"$(shell dpkg --print-archi
 BASE_LAYER = "${IMAGE}"-prebuild
 WORK_DIR = /workspace/"${CODENAME}"
 
-SHELLCHECK_PREFIX := docker run --rm -v ${CURDIR}:/workdir -w /workdir ${DRYCC_REGISTRY}/drycc/go-dev shellcheck
+SHELLCHECK_PREFIX := podman run --rm -v ${CURDIR}:/workdir -w /workdir ${DRYCC_REGISTRY}/drycc/go-dev shellcheck
 SHELL_SCRIPTS = $(shell find . -name '*.sh') $(wildcard debootstrap/*/rootfs/*/bin/*) $(wildcard debootstrap/*/rootfs/*/sbin/*)
 
 SHELL=/bin/bash -o pipefail
@@ -15,22 +15,22 @@ clean:
 mkimage:
 	./scripts/mkimage.sh minbase "${CODENAME}"
 
-docker-import:
-	@docker import ${WORK_DIR}.tar.gz ${BASE_LAYER}
+podman-import:
+	@podman import ${WORK_DIR}.tar.gz ${BASE_LAYER}
 
-docker-build: mkimage docker-import
-	@docker build . \
+podman-build: mkimage podman-import
+	@podman build . \
 	  --tag ${IMAGE} \
 	  --build-arg BASE_LAYER=${BASE_LAYER} \
 	  --file Dockerfile
 
-docker-immutable-push: test-style	build
-	@docker push "${IMAGE}"
+podman-immutable-push: test-style	build
+	@podman push "${IMAGE}"
 	@echo -e "\\033[32m---> Build image $codename complete, enjoy life...\\033[0m"
 
-build: docker-build
+build: podman-build
 
-publish: docker-immutable-push
+publish: podman-immutable-push
 
 test: test-style
 

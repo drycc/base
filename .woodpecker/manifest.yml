@@ -22,13 +22,13 @@ pipeline:
 - name: publish-manifest
   image: bash
   commands:
-  - docker run --rm
+  - podman run --rm
     -e PLUGIN_SPEC=.woodpecker/manifest.tmpl
     -e PLUGIN_USERNAME=$CONTAINER_USERNAME
     -e PLUGIN_PASSWORD=$CONTAINER_PASSWORD
     -v $(pwd):$(pwd)
     -w $(pwd)
-    plugins/manifest
+    docker.io/plugins/manifest
   secrets:
   - container_username
   - container_password
