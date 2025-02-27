@@ -26,6 +26,7 @@ function main() {
     local os_arch="${OS_ARCH:-$(dpkg --print-architecture)}"
     local os_flavour="${OS_FLAVOUR:-${ID}-${VERSION_ID}}"
 
+    local stack_path="/opt/drycc/${name}"
     local stack_name="${name}-${version}-${os_name}-${os_arch}-${os_flavour}"
     local stack_filename="${stack_name}".tar.gz
     local stack_download_url="${STACK_DOWNLOAD_URL}/${name}/${stack_filename}"
@@ -38,18 +39,27 @@ function main() {
     else
         curl --silent --show-error --fail "${stack_download_url}" -o "${TMP_DIR}/${stack_filename}"
     fi
-    echo "Generate installation directory: /opt/drycc/${name}"
-    if [ -d /opt/drycc/"${name}" ]; then
-        rm -rf /opt/drycc/"${name}"
+    echo "Generate installation directory: ${stack_path}"
+    if [ -d "${stack_path}" ]; then
+        echo "Clean up the directory: ${stack_path}"
+        rm -rf "${stack_path}"
     fi
-    mkdir -p /opt/drycc/"${name}"
-
+    mkdir -p "${stack_path}"
+    
+    echo "Extract data to a temporary directory: ${TMP_DIR}"
     tar --directory "${TMP_DIR}" --extract --gunzip --file "${TMP_DIR}"/"${stack_filename}" --no-same-owner
-    # shellcheck disable=SC2046,SC2086
-    install-packages $(< "${TMP_DIR}"/meta/dependencies)
+    
+    packages=$(grep -vE '^\s*(#|$)' "${TMP_DIR}"/meta/dependencies)
+    if [[ -n "${packages:+x}" ]]; then
+        echo "Install system packages: ${packages}"
+        install-packages "$packages"
+    fi
+
+    echo "Install stack: ${name} ${version}"
     "${TMP_DIR}"/meta/preinstall
-    cp -rf "${TMP_DIR}"/data/* /opt/drycc/"${name}"
+    cp -rf "${TMP_DIR}"/data/* "${stack_path}"
     "${TMP_DIR}"/meta/postinstall
+    echo "Stack installation completed"
 }
 
 main "$@"

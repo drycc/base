@@ -3,15 +3,13 @@
 set -e
 set -u
 
-export DEBIAN_FRONTEND=noninteractive
-
 function main {
     n=0
     max=2
     until [ $n -gt $max ]; do
         set +e
         (
-        apt-get update -qq &&
+        apt-get update &&
         apt-get install -y --no-install-recommends "$@"
         )
         CODE=$?

@@ -49,9 +49,13 @@ function main() {
     echo "Extract data to a temporary directory: ${TMP_DIR}"
     tar --directory "${TMP_DIR}" --extract --gunzip --file "${TMP_DIR}"/"${stack_filename}" --no-same-owner
     
-    echo "Install stack to directory: ${stack_path}"
-    # shellcheck disable=SC2046,SC2086
-    install-packages $(< "${TMP_DIR}"/meta/dependencies)
+    packages=$(grep -vE '^\s*(#|$)' "${TMP_DIR}"/meta/dependencies)
+    if [[ -n "${packages:+x}" ]]; then
+        echo "Install system packages: ${packages}"
+        install-packages "$packages"
+    fi
+
+    echo "Install stack: ${name} ${version}"
     "${TMP_DIR}"/meta/preinstall
     cp -rf "${TMP_DIR}"/data/* "${stack_path}"
     "${TMP_DIR}"/meta/postinstall

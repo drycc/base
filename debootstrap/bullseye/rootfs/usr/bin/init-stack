@@ -1,50 +1,65 @@
 #!/bin/bash
 
-# mark INIT_STACK
-export INIT_STACK=1
-# check to see if this file is being run or sourced from another script
-_is_sourced() {
-	# https://unix.stackexchange.com/a/215279
-	[ "${#FUNCNAME[@]}" -ge 2 ] \
-		&& [ "${FUNCNAME[0]}" = '_is_sourced' ] \
-		&& [ "${FUNCNAME[1]}" = 'source' ]
+set -e
+set -u
+# Constants
+TMP_DIR=$(mktemp -d)
+STACK_CACHE_ROOT="/tmp/drycc/stack/cache"
+STACK_DOWNLOAD_URL="${STACK_DOWNLOAD_URL:-https://download.drycc.cc/stacks}"
+
+# OS Release
+# shellcheck source=/dev/null
+. /etc/os-release
+
+function clean {
+    # delay before exiting, so stdout/stderr flushes through the logging system
+    rm -rf "${TMP_DIR}"
+    sleep 3
+}
+trap clean EXIT
+
+function main() {
+    local name="${1:?name is required}"
+    local version="${2:?version is required}"
+
+    local os_name="${OS_NAME:-linux}"
+    local os_arch="${OS_ARCH:-$(dpkg --print-architecture)}"
+    local os_flavour="${OS_FLAVOUR:-${ID}-${VERSION_ID}}"
+
+    local stack_path="/opt/drycc/${name}"
+    local stack_name="${name}-${version}-${os_name}-${os_arch}-${os_flavour}"
+    local stack_filename="${stack_name}".tar.gz
+    local stack_download_url="${STACK_DOWNLOAD_URL}/${name}/${stack_filename}"
+
+    echo "Downloading $stack_filename package"
+    if [ -f "${STACK_CACHE_ROOT}/${stack_filename}" ]; then
+        echo "${STACK_CACHE_ROOT}/${stack_filename} already exists, skipping download."
+        cp "${STACK_CACHE_ROOT}/${stack_filename}" "${TMP_DIR}/${stack_filename}"
+        rm "${STACK_CACHE_ROOT}/${stack_filename}"
+    else
+        curl --silent --show-error --fail "${stack_download_url}" -o "${TMP_DIR}/${stack_filename}"
+    fi
+    echo "Generate installation directory: ${stack_path}"
+    if [ -d "${stack_path}" ]; then
+        echo "Clean up the directory: ${stack_path}"
+        rm -rf "${stack_path}"
+    fi
+    mkdir -p "${stack_path}"
+    
+    echo "Extract data to a temporary directory: ${TMP_DIR}"
+    tar --directory "${TMP_DIR}" --extract --gunzip --file "${TMP_DIR}"/"${stack_filename}" --no-same-owner
+    
+    packages=$(grep -vE '^\s*(#|$)' "${TMP_DIR}"/meta/dependencies)
+    if [[ -n "${packages:+x}" ]]; then
+        echo "Install system packages: ${packages}"
+        install-packages "$packages"
+    fi
+
+    echo "Install stack: ${name} ${version}"
+    "${TMP_DIR}"/meta/preinstall
+    cp -rf "${TMP_DIR}"/data/* "${stack_path}"
+    "${TMP_DIR}"/meta/postinstall
+    echo "Stack installation completed"
 }
 
-env_list=$(find /opt/drycc/*/env/* 2>/dev/null || echo "")
-for env in ${env_list}
-do
-  key=$(echo "${env}" | awk -F "/" '{print $NF}')
-  value=$(<"${env}")
-  # shellcheck source=/dev/null
-  export "${key}=${value}"
-done
-
-env_launch_list=$(find /opt/drycc/*/env.launch/* 2>/dev/null || echo "")
-for env in ${env_launch_list}
-do
-  key=$(echo "${env}" | awk -F "/" '{print $NF}')
-  value=$(<"${env}")
-  # shellcheck source=/dev/null
-  export "${key}=${value}"
-done
-
-profile_list=$(find /opt/drycc/*/profile.d/* 2>/dev/null || echo "")
-for profile in ${profile_list}
-do
-  # shellcheck source=/dev/null
-  . "${profile}"
-done
-
-exec_list=$(find /opt/drycc/*/exec.d/* 2>/dev/null) || echo ""
-for _exec in ${exec_list}
-do
-  "${_exec}"
-done
-
-if ! _is_sourced; then
-  if [[ "$$" == "1" ]] ; then
-    exec tini -g -- "$@"
-  else
-    exec tini -sg -- "$@"
-  fi
-fi
+main "$@"
