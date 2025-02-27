@@ -9,22 +9,25 @@ usage() {
   echo
   echo "[VARIANT]: The debian variant to use."
   echo "[DIST]: The debian dist to use."
+  echo "[SOURCES]: The debian sources to use."
   echo
   exit 1
 }
 
-if [ $# -ne 2 ]; then
+if [ $# -ne 3 ]; then
     usage
 fi
 
 VARIANT=$1
 DIST=$2
+SOURCES=$3
 
 WORKDIR="/workspace/$DIST"
+
 ROOTFSDIR=$(cd "$(dirname "$0")/../debootstrap/$DIST/rootfs";pwd)
 mkdir -p "$WORKDIR"
 
-debootstrap --variant="$VARIANT" "$DIST" "$WORKDIR" http://httpredir.debian.org/debian
+debootstrap --variant="$VARIANT" "$DIST" "$WORKDIR" "$SOURCES"/debian
 if [ -d "$ROOTFSDIR" ];then
   cp -rf "$ROOTFSDIR"/* "$WORKDIR"
 fi
@@ -45,15 +48,25 @@ rootfs_chroot apt-get install -y --no-install-recommends \
 # We have our own version of initctl, tell dpkg to not overwrite it.
 rootfs_chroot dpkg-divert --local --rename --add /sbin/initctl
 
+# Remove default mirrors
+rm -rf "$WORKDIR"/etc/apt/sources.list
 # Set the mirrors to distro-based ones
-cat << EOF > "$WORKDIR"/etc/apt/sources.list
-deb http://deb.debian.org/debian $DIST main
-deb http://deb.debian.org/debian $DIST-updates main
-deb http://deb.debian.org/debian-security $DIST-security main
+cat << EOF > "$WORKDIR"/etc/apt/sources.list.d/debian.sources
+Types: deb
+URIs: $SOURCES/debian
+Suites: $DIST $DIST-updates
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: $SOURCES/debian-security
+Suites: $DIST-security
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 EOF
 
 # Do a final upgrade.
-rootfs_chroot apt-get -o Acquire::Check-Valid-Until=false update
+rootfs_chroot apt-get update
 rootfs_chroot apt-get -y -q upgrade
 
 # Clean some apt artifacts

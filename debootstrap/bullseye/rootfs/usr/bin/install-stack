@@ -49,7 +49,7 @@ function main() {
     echo "Extract data to a temporary directory: ${TMP_DIR}"
     tar --directory "${TMP_DIR}" --extract --gunzip --file "${TMP_DIR}"/"${stack_filename}" --no-same-owner
     
-    packages=$(grep -vE '^\s*(#|$)' "${TMP_DIR}"/meta/dependencies)
+    packages=$(tr '\t\n' ' ' < "${TMP_DIR}/meta/dependencies" | tr -s ' ')
     if [[ -n "${packages:+x}" ]]; then
         echo "Install system packages: ${packages}"
         install-packages "$packages"

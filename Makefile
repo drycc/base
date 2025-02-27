@@ -13,7 +13,7 @@ clean:
 	@rm -rf "${WORK_DIR}" "${WORK_DIR}".tar.gz
 
 mkimage:
-	./scripts/mkimage.sh minbase "${CODENAME}"
+	./scripts/mkimage.sh minbase "${CODENAME}" "${SOURCES}"
 
 podman-import:
 	@podman import ${WORK_DIR}.tar.gz ${BASE_LAYER}
