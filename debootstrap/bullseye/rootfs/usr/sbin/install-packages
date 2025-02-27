@@ -9,8 +9,7 @@ function main {
     until [ $n -gt $max ]; do
         set +e
         (
-        apt-get update &&
-        apt-get install -y --no-install-recommends "$@"
+        eval "apt-get update; apt-get install -y --no-install-recommends $*"
         )
         CODE=$?
         set -e
