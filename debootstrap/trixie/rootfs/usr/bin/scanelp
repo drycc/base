@@ -1,8 +1,25 @@
 #!/bin/bash
 
-find "$1" -type f -executable -exec scanelf --needed --nobanner --format '%n#p' '{}' ';' \
-  | tr ',' '\n' \
+query_package() {
+  local lib="$1"
+  [ ! -e "$lib" ] && return
+  
+  local target_lib
+  if [ -L "$lib" ]; then
+    target_lib=$(readlink -f "$lib")
+    [ ! -e "$target_lib" ] && target_lib="$lib"
+  else
+    target_lib="$lib"
+  fi
+  
+  dpkg -S "$target_lib" 2>/dev/null | cut -d: -f1 || \
+  dpkg -S "*$(basename "$target_lib")*" 2>/dev/null | head -1 | cut -d: -f1
+}
+
+find "$1" -type f -executable -exec ldd '{}' ';' 2>/dev/null \
+  | awk '/=> \// {print $3}' \
   | sort -u \
-  | xargs -rt dpkg -S 2>/dev/null \
-  | awk -F ": " '{print $1}' \
+  | while read -r lib; do
+    [ -n "$lib" ] && query_package "$lib"
+  done \
   | sort -u
